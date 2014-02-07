@@ -2,29 +2,27 @@
 
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
-    <EditTextPreference
+    <!-- <EditTextPreference
         android:defaultValue="@string/pref_default_update_interval"
         android:inputType="number"
         android:key="update_interval"
         android:maxLines="1"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:title="@string/pref_title_update_interval" />
+        android:title="@string/pref_title_update_interval" /> -->
 
-    <ListPreference
+    <!-- <ListPreference
         android:key="temperature_file"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:title="@string/pref_title_temperature_file" />
+        android:title="@string/pref_title_temperature_file" /> -->
 
     <EditTextPreference
-        android:defaultValue="@string/pref_default_temperature_divider"
-        android:inputType="number"
-        android:key="temperature_divider"
+        android:key="default_text"
         android:maxLines="1"
         android:selectAllOnFocus="true"
         android:singleLine="true"
-        android:title="@string/pref_title_temperature_divider" />
+        android:title="@string/pref_title_default_text" />
 
     <!--
          NOTE: Hide buttons to simplify the UI. Users can touch outside the dialog to
@@ -40,4 +38,9 @@
         android:positiveButtonText="@null"
         android:title="@string/pref_title_position" />
 
+    <Preference
+        android:title="@string/pref_title_restart_sys_ui"
+        android:key="restart_sys_ui"
+        >
+    </Preference>
 </PreferenceScreen>
