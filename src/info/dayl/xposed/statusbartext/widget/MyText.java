@@ -20,6 +20,7 @@ import android.view.ActionProvider.VisibilityListener;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import info.dayl.xposed.statusbartext.ToggleableColorPicker;
 import info.dayl.xposed.statusbartext.XposedInit;
 import info.dayl.xposed.statusbartext.activities.SettingsActivity;
 
@@ -148,6 +149,10 @@ public class MyText extends TextView implements OnSharedPreferenceChangeListener
                         String text = intent.getStringExtra(SettingsActivity.KEY_DEFAULT_TEXT_WITH_PACK);
                         Log.e("DayL", "the text update : " + text);
                         editor.putString(SettingsActivity.KEY_DEFAULT_TEXT, text);
+                    } else if (intent.hasExtra(SettingsActivity.KEY_COLOR)){
+                        int color = intent.getIntExtra(SettingsActivity.KEY_COLOR, ToggleableColorPicker.COLOR_WHITE);
+                        Log.e("DayL", "the color update : " + color);
+                        editor.putInt(SettingsActivity.KEY_COLOR, color);
                     }
                     // if(intent.hasExtra("temperature_file")) {
                     // editor.putString("temperature_file",
@@ -235,6 +240,10 @@ public class MyText extends TextView implements OnSharedPreferenceChangeListener
             String newText = pref.getString(SettingsActivity.KEY_DEFAULT_TEXT, "DayL");
             Log.e("DayL", "the default text is changed in listener : " + newText);
             setText(newText);
+        } else if (key.equals(SettingsActivity.KEY_COLOR)){
+            int color = pref.getInt(SettingsActivity.KEY_COLOR, ToggleableColorPicker.COLOR_WHITE);
+            Log.e("DayL", "the color is changed in listener : " + color);
+            setTextColor(color);
         }
     }
 }

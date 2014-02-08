@@ -2,14 +2,13 @@
 package info.dayl.xposed.statusbartext.activities;
 
 import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.media.Ringtone;
-import android.media.RingtoneManager;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.ListPreference;
@@ -18,11 +17,10 @@ import android.preference.Preference.OnPreferenceClickListener;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
-import android.preference.RingtonePreference;
-import android.text.TextUtils;
 import android.util.Log;
 
 import info.dayl.xposed.statusbartext.R;
+import info.dayl.xposed.statusbartext.ToggleableColorPicker;
 import info.dayl.xposed.statusbartext.Utils;
 
 /**
@@ -38,13 +36,14 @@ import info.dayl.xposed.statusbartext.Utils;
  */
 public class SettingsActivity extends PreferenceActivity {
     public static final String TAG = "SettingsActivity";
-    
+
     public static final String KEY_DEFAULT_TEXT = "default_text";
     public static final String KEY_POSITION = "position";
+    public static final String KEY_COLOR = "color";
     public static final String KEY_RESTART_SYS_UI = "restart_sys_ui";
     public static final String KEY_DEFAULT_TEXT_WITH_PACK = "info.dayl.xposed.statusbartext.default_text";
     public static final String KEY_POSITION_WITH_PACK = "info.dayl.xposed.statusbartext.position";
-    
+
     public static final int VALUE_ABSOLUTE_LEFT = 0;
     public static final int VALUE_LEFT = 1;
     public static final int VALUE_RIGHT = 2;
@@ -56,21 +55,22 @@ public class SettingsActivity extends PreferenceActivity {
      */
     private static final boolean ALWAYS_SIMPLE_PREFS = false;
     public static final String ACTION_SETTINGS_UPDATE = "info.dayl.xposed.statusbartext.settings_update";
-    private Preference preferenceText;
-    private ListPreference preferencePosi;
-
+    private Preference mPreferenceText;
+    private ListPreference mPreferencePosi;
+    private ToggleableColorPicker mColorPicker;
+    
     @Override
     public void onAttachedToWindow() {
         super.onAttachedToWindow();
     }
 
     @Override
-    protected void onPostCreate(Bundle savedInstanceState) {
-        super.onPostCreate(savedInstanceState);
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
 
         setupSimplePreferencesScreen();
     }
-
+    
     /**
      * Shows the simplified settings UI if the device configuration if the
      * device configuration dictates that a simplified, single-pane UI should be
@@ -87,17 +87,31 @@ public class SettingsActivity extends PreferenceActivity {
         // Add 'general' preferences.
         addPreferencesFromResource(R.xml.pref_general);
 
-        preferenceText = findPreference(KEY_DEFAULT_TEXT);
-        preferencePosi = (ListPreference) findPreference(KEY_POSITION);
+        mPreferenceText = findPreference(KEY_DEFAULT_TEXT);
+        mPreferencePosi = (ListPreference) findPreference(KEY_POSITION);
+        mColorPicker = (ToggleableColorPicker) findPreference(KEY_COLOR);
 
-        bindPreferenceSummaryToValue(preferenceText);
-        bindPreferenceSummaryToValue(preferencePosi);
+        bindPreferenceSummaryToValue(mPreferenceText);
+        bindPreferenceSummaryToValue(mPreferencePosi);
+        bindPreferenceSummaryToValueInteger(mColorPicker);
 
         findPreference(KEY_RESTART_SYS_UI).setOnPreferenceClickListener(
                 new OnPreferenceClickListener() {
                     @Override
                     public boolean onPreferenceClick(Preference preference) {
-                        Utils.killSystemUi();
+                        AlertDialog.Builder builder = new AlertDialog.Builder(
+                                SettingsActivity.this);
+                        builder.setMessage(R.string.msg_restart_system_ui)
+                                .setPositiveButton(android.R.string.ok,
+                                        new DialogInterface.OnClickListener() {
+                                            @Override
+                                            public void onClick(DialogInterface dialog, int which) {
+                                                Utils.killSystemUi();
+                                            }
+                                        })
+                                .setNegativeButton(android.R.string.cancel, null)
+                                .setCancelable(true)
+                                .create().show();
                         return true;
                     }
                 });
@@ -113,7 +127,7 @@ public class SettingsActivity extends PreferenceActivity {
     @Override
     protected void onResume() {
         super.onResume();
-//        setSummaryUp();
+        // setSummaryUp();
     }
 
     private void setSummaryUp() {
@@ -123,9 +137,10 @@ public class SettingsActivity extends PreferenceActivity {
         // get the numOfKey of the list summary
         // get the right summary through the right key
         // EDIT: finally, i modify the string values
-        preferencePosi.setSummary(res.getStringArray(R.array.pref_position_list_titles)[Integer.valueOf(sharedPreferences.getString(
-                KEY_POSITION, "0"))]);
-        preferenceText.setSummary(sharedPreferences.getString(KEY_DEFAULT_TEXT, "DayL"));
+        mPreferencePosi.setSummary(res.getStringArray(R.array.pref_position_list_titles)[Integer
+                .valueOf(sharedPreferences.getString(
+                        KEY_POSITION, "0"))]);
+        mPreferenceText.setSummary(sharedPreferences.getString(KEY_DEFAULT_TEXT, "DayL"));
     }
 
     /** {@inheritDoc} */
@@ -180,6 +195,8 @@ public class SettingsActivity extends PreferenceActivity {
                 i.putExtra(KEY_POSITION_WITH_PACK, position);
             } else if (key.equals(KEY_DEFAULT_TEXT)) {
                 i.putExtra(KEY_DEFAULT_TEXT_WITH_PACK, stringValue);
+            } else if (key.equals(KEY_COLOR)) {
+                i.putExtra(KEY_COLOR, Integer.parseInt(stringValue));
             } else {
                 shouldBroadCast = false;
             }
@@ -264,6 +281,20 @@ public class SettingsActivity extends PreferenceActivity {
                         ""));
     }
 
+    private static void bindPreferenceSummaryToValueInteger(Preference preference) {
+        // Set the listener to watch for value changes.
+        preference
+                .setOnPreferenceChangeListener(sBindPreferenceSummaryToValueListener);
+
+        // Trigger the listener immediately with the preference's
+        // current value.
+        sBindPreferenceSummaryToValueListener.onPreferenceChange(
+                preference,
+                PreferenceManager.getDefaultSharedPreferences(
+                        preference.getContext()).getInt(preference.getKey(),
+                        ToggleableColorPicker.COLOR_WHITE));
+    }
+
     /**
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -283,4 +314,20 @@ public class SettingsActivity extends PreferenceActivity {
             bindPreferenceSummaryToValue(findPreference("example_list"));
         }
     }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle state) {
+        // restore the expanded state of the color picker
+        mColorPicker.setExpanded(state
+                .getBoolean(ToggleableColorPicker.EXPANDED_STATE));
+        super.onRestoreInstanceState(state);
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        // save the expanded state of the color picker
+        outState.putBoolean(ToggleableColorPicker.EXPANDED_STATE, mColorPicker.isExpanded());
+    }
+
 }

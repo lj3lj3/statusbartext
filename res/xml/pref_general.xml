@@ -37,7 +37,10 @@
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
         android:title="@string/pref_title_position" />
-
+    <info.dayl.xposed.statusbartext.ToggleableColorPicker
+        android:key="color"
+        />
+    
     <Preference
         android:title="@string/pref_title_restart_sys_ui"
         android:key="restart_sys_ui"

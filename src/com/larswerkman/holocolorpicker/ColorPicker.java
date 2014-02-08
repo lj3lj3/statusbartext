@@ -318,6 +318,26 @@ public class ColorPicker extends View {
 		
 		mCenterNewColor = calculateColor(mAngle);
 		mCenterOldColor = calculateColor(mAngle);
+		
+		// add this for the full color picker functions
+		addAllOtherComponents();
+	}
+	
+	/**
+	 * add all other components to this color picker, by default
+	 */
+	private void addAllOtherComponents (){
+	    Context context = this.getContext();
+	    
+	    mOpacityBar = new OpacityBar(context);
+        addOpacityBar(mOpacityBar);
+        
+        // this already have
+//        mSaturationBar = new SaturationBar(context);
+//        addSaturationBar(mSaturationBar);
+        
+        mSVbar = new SVBar(context);
+        addSVBar(mSVbar);
 	}
 
 	@Override
